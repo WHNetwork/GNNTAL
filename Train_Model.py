@@ -52,7 +52,7 @@ if __name__=='__main__':
     sage_para = dict([["in_dim", 10], ["out_dim", 32], ["embed_dim", 32], ["activation", "elu"]])
     transformer_para = dict([["d_model", 32],["nhead", 4],["num_encoder_layers",2],["num_decoder_layers",2],["dim_feedforward",32],["dropout",0.1]])
     gnnt = GNNT(sage_para, transformer_para)
-    Edge = pd.read_csv('D://DataSet/.csv')  # Network Data
+    Edge = pd.read_csv('D://DataSet/train.csv')  # Network Data
     u = list(Edge['u'])
     v = list(Edge['v'])
     edge_list = [(u[i], v[i]) for i in range(len(v))]
@@ -65,7 +65,7 @@ if __name__=='__main__':
     node_features = torch.cat((node_features_[:, 0:8], node_features_[:, 9:11]), dim=1)
     output = gnnt(g,node_features)
     G = nx.convert_node_labels_to_integers(G)
-    data = pd.read_csv("..\\dataset\\synthetic\\train_1000_4_Influence.csv")  # Label
+    data = pd.read_csv("D://Dataset/train_Influence.csv")  # Label
     data_memory = [list(data.loc[i]) for i in range(len(data))]
     print("data_memory", data_memory)
     for x in data_memory: x[0] = int(x[0])
