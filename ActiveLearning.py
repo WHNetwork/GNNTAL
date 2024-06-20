@@ -8,7 +8,6 @@ from sklearn.metrics import pairwise_distances_argmin_min
 from sklearn.cluster import KMeans
 
 
-#调整节点编号，使节点从0开始计数
 def adjust_node_labels(G):
     mapping = {node: node - 1 for node in G.nodes}
     H = nx.relabel_nodes(G, mapping)
@@ -60,7 +59,6 @@ def get_dgl_g_input(G):
 
 
 
-# 核心点采样
 def core_point_sampling(node_features, n_clusters):
     kmeans = KMeans(n_clusters=n_clusters, random_state=0).fit(node_features)
     clusters = kmeans.labels_
@@ -78,12 +76,10 @@ def core_point_sampling(node_features, n_clusters):
     return core_indices
 
 
-# 不确定性采样
 def uncertainty_sampling(predictions_list, core_indices, n_select):
     core_predictions = np.array([predictions_list[i] for i in core_indices])
-    # 计算不确定性，可以使用预测分数的方差
-    uncertainty = np.var(core_predictions, axis=1)  # 计算每个核心点的预测分数的方差
-    selected_indices = np.argsort(uncertainty)[-n_select:]  # 选择方差最大的几个点
+    uncertainty = np.var(core_predictions, axis=1) 
+    selected_indices = np.argsort(uncertainty)[-n_select:] 
 
     return [core_indices[i] for i in selected_indices]
 
@@ -106,22 +102,22 @@ def rmse(value,train_nodes, labels):
     return rmse.item()
 
 def train(train_nodes, nodes_list, model, node_labels, g, node_features,G):
-    data_train = [x for x in nodes_list if x in train_nodes]  # 训练集
-    data_test = [x for x in nodes_list if x not in train_nodes]  # 测试
+    data_train = [x for x in nodes_list if x in train_nodes]  
+    data_test = [x for x in nodes_list if x not in train_nodes] 
     # # print(model)
     print("train_data:", data_train)
     print("test_data", data_test)
-    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  # 优化器
+    optimizer = torch.optim.Adam(model.parameters(), lr=0.001)  
     loss = nn.MSELoss()
-    train_ls, test_ls, train_logls, test_logls = [], [], [], []  # 训练损失随训练次数曲线
-    # 微调前测试集loss
+    train_ls, test_ls, train_logls, test_logls = [], [], [], []  
+    
     model.eval()
     value = model(g, node_features)
     test_loss = rmse(value, [x for x in data_test], node_labels)
     test_ls.append(test_loss)
     model.train()
 
-    # 开始微调
+    
     for epoch in range(150):
         print("epoch:", epoch)
         nodes = [x for x in train_nodes]
@@ -133,7 +129,7 @@ def train(train_nodes, nodes_list, model, node_labels, g, node_features,G):
         l = loss(torch.log(y), torch.log(train_labels))
         optimizer.zero_grad()
         l.backward()
-        # 使用梯度裁剪
+        
         torch.nn.utils.clip_grad_norm_(model.parameters(), max_norm=1.0)
         optimizer.step()
         value = model(g, node_features)
@@ -148,7 +144,7 @@ def train(train_nodes, nodes_list, model, node_labels, g, node_features,G):
     plt.show()
     plt.close()
     model.eval()
-    with torch.no_grad():  # 在推理时不需要计算梯度
+    with torch.no_grad():  
         predictions = model(g, node_features)
     predictions = predictions.tolist()
     preresult = []
@@ -159,8 +155,6 @@ def train(train_nodes, nodes_list, model, node_labels, g, node_features,G):
     return preresult
 
 def GNNTAL(G):
-    # 生成标签
-    # generatelabel(G)
     labels_file_path = 'SIRLabels/Dolphins.txt'
     labels_dict = read_labels_from_file(labels_file_path)
     print(labels_dict)
@@ -174,18 +168,18 @@ def GNNTAL(G):
     model = torch.load('GNNT.pth')
 
     # 提取核心点
-    n_clusters = 20  # 设置聚类数目
+    n_clusters = 20  
     core_indices = core_point_sampling(node_features, n_clusters)
     print(core_indices)
 
     model.eval()
-    with torch.no_grad():  # 在推理时不需要计算梯度
+    with torch.no_grad():  
         predictions = model(g, node_features)
     predictions = predictions.tolist()
     print("first predictions:", predictions)
 
-    # 不确定性采样选择节点
-    n_select = int(0.1*len(G.nodes()))  # 设置选择的节点数目
+    
+    n_select = int(0.1*len(G.nodes()))  
     print("n_select", n_select)
     selected_core_point_indices = uncertainty_sampling(predictions, core_indices, n_select)
 
