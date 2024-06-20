@@ -65,7 +65,7 @@ if __name__=='__main__':
     node_features = torch.cat((node_features_[:, 0:8], node_features_[:, 9:11]), dim=1)
     output = gnnt(g,node_features)
     G = nx.convert_node_labels_to_integers(G)
-    data = pd.read_csv("D://Dataset/train_Influence.csv")  # Label
+    data = pd.read_csv("D://Dataset/train_Labels.csv")  # Label
     data_memory = [list(data.loc[i]) for i in range(len(data))]
     print("data_memory", data_memory)
     for x in data_memory: x[0] = int(x[0])
