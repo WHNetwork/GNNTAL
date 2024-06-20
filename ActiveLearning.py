@@ -26,7 +26,6 @@ def get_neigbors(g, node, depth):
 
 
 def get_dgl_g_input(G):
-    # G = copy.deepcopy(G0)
     input = torch.ones(len(G), 11)
     for i in G.nodes():
         # print(i)
@@ -167,7 +166,6 @@ def GNNTAL(G):
 
     model = torch.load('GNNT.pth')
 
-    # 提取核心点
     n_clusters = 20  
     core_indices = core_point_sampling(node_features, n_clusters)
     print(core_indices)
